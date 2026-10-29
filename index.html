@@ -860,14 +860,18 @@ function checkEvalPage(i) {
 
 $('#form-back-top').addEventListener('click', () => $('#form-back').click());
 
-// بعد ما ينقفل كيبورد الجوال: نرجّع الصفحة لمكانها لو ظلت مزحوحة لفوق مع فراغ تحت
+// بعد ما ينقفل كيبورد الجوال: نرجّع الصفحة لمكانها لو ظلت مزحوحة لفوق مع فراغ تحت.
+// يشتغل بس خلال ثانيتين بعد ترك حقل، وبس لو الصفحة فعلًا طالعة عن مكانها —
+// لأن شريط العنوان في الجوال يطلع وينزل مع التمرير ويطلق resize، وأي scrollTo وقتها يوقف انسيابية التمرير
+let leftFieldAt = 0;
 function fixKeyboardScroll() {
+  if (Date.now() - leftFieldAt > 2000) return;
   const a = document.activeElement;
   if (a && /^(INPUT|TEXTAREA|SELECT)$/.test(a.tagName)) return; // انتقل لحقل ثاني، الكيبورد لسه مفتوح
   const max = Math.max(0, document.documentElement.scrollHeight - window.innerHeight);
-  window.scrollTo(0, Math.min(window.scrollY, max));
+  if (window.scrollY > max + 1) window.scrollTo(0, max);
 }
-document.addEventListener('focusout', () => setTimeout(fixKeyboardScroll, 150));
+document.addEventListener('focusout', () => { leftFieldAt = Date.now(); setTimeout(fixKeyboardScroll, 150); });
 if (window.visualViewport) window.visualViewport.addEventListener('resize', () => setTimeout(fixKeyboardScroll, 50));
 $('#form-back').addEventListener('click', () => {
   if (state.form && (state.form.isEval || state.form.isLog) && state.page > 0) { hideAlert(); showPage(state.page - 1); }
